@@ -7,27 +7,36 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Generate Clean Android Project
+      - name: Set up Gradle 8.2
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Generate Clean Android Project Files
         run: |
           mkdir -p app/src/main/java/com/gtest/exam
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/mipmap-xxxhdpi
 
-          # App icon
+          # Set app icon if available
           if [ -f "icon-512.png" ]; then
             cp icon-512.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           fi
 
-          # Android Manifest (Fullscreen Native WebView)
+          # AndroidManifest.xml (Zero TitleBar, Zero URL Bar, Pure Native Fullscreen)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -53,14 +62,14 @@ jobs:
           </manifest>
           EOF
 
-          # Strings
+          # Strings.xml
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">GTEST</string>
           </resources>
           EOF
 
-          # Native WebView Java Code
+          # MainActivity.java (Pure Webview, Clean, No Ads, No Sliders)
           cat << 'EOF' > app/src/main/java/com/gtest/exam/MainActivity.java
           package com.gtest.exam;
 
@@ -125,13 +134,14 @@ jobs:
           }
           EOF
 
-          # Settings gradle
+          # Settings.gradle
           echo "include ':app'" > settings.gradle
 
           # App build.gradle
           cat << 'EOF' > app/build.gradle
-          apply plugin: 'com.android.application'
-
+          plugins {
+              id 'com.android.application'
+          }
           android {
               namespace 'com.gtest.exam'
               compileSdk 34
@@ -150,16 +160,14 @@ jobs:
           }
           EOF
 
-          # SDK path binding
+          # Local.properties for Android SDK path
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Build APK with Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version 8.2
-          ./gradlew assembleDebug --no-daemon
+      - name: Build Debug APK
+        run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: Upload Clean APK
+      - name: Upload Clean Fullscreen APK
         uses: actions/upload-artifact@v4
         with:
-          name: GTEST-Clean-Fullscreen-App
+          name: GTEST-Fullscreen-App
           path: app/build/outputs/apk/debug/app-debug.apk
