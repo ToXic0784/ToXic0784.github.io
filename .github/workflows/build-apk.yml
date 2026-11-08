@@ -30,8 +30,18 @@ jobs:
           rm -rf app
           mkdir -p app/src/main/java/com/gtest/exam
           mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/mipmap-xxhdpi
 
-          # AndroidManifest.xml (Zero URL Bar, Fullscreen Native)
+          # Fetch picture directly from GTEST repository
+          curl -s -L "https://raw.githubusercontent.com/ToXic0784/GTEST/main/icon-512.png" -o app/src/main/res/mipmap-xxhdpi/ic_launcher.png || true
+          if [ ! -s app/src/main/res/mipmap-xxhdpi/ic_launcher.png ]; then
+            curl -s -L "https://raw.githubusercontent.com/ToXic0784/GTEST/main/icon.png" -o app/src/main/res/mipmap-xxhdpi/ic_launcher.png || true
+          fi
+          if [ ! -s app/src/main/res/mipmap-xxhdpi/ic_launcher.png ]; then
+            curl -s -L "https://raw.githubusercontent.com/ToXic0784/GTEST/main/logo.png" -o app/src/main/res/mipmap-xxhdpi/ic_launcher.png || true
+          fi
+
+          # AndroidManifest.xml (Custom Icon, Zero URL Bar, Fullscreen Native)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -40,7 +50,7 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <application
                   android:allowBackup="true"
-                  android:icon="@android:drawable/sym_def_app_icon"
+                  android:icon="@mipmap/ic_launcher"
                   android:label="GTEST"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                   android:usesCleartextTraffic="true">
@@ -64,7 +74,7 @@ jobs:
           </resources>
           EOF
 
-          # MainActivity.java (Pure Webview, Clean, Zero Sliders, Zero Ads)
+          # MainActivity.java (Zero ads, zero sliders, clean pure native webview)
           cat << 'EOF' > app/src/main/java/com/gtest/exam/MainActivity.java
           package com.gtest.exam;
 
@@ -151,8 +161,8 @@ jobs:
                   applicationId "com.gtest.exam"
                   minSdk 21
                   targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
+                  versionCode 3
+                  versionName "1.2"
               }
 
               buildTypes {
