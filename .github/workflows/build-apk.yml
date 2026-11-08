@@ -16,26 +16,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.2'
-
       - name: Generate Clean Android Project
         run: |
           mkdir -p app/src/main/java/com/gtest/exam
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/mipmap-xxxhdpi
 
-          # Set app icon if exists
+          # App icon
           if [ -f "icon-512.png" ]; then
             cp icon-512.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           fi
 
-          # Android Manifest (Zero URL Bar, Fullscreen Native)
+          # Android Manifest (Fullscreen Native WebView)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -68,7 +60,7 @@ jobs:
           </resources>
           EOF
 
-          # Java Native WebView Code (No Ads, No Sliders, Pure Webview)
+          # Native WebView Java Code
           cat << 'EOF' > app/src/main/java/com/gtest/exam/MainActivity.java
           package com.gtest.exam;
 
@@ -158,8 +150,13 @@ jobs:
           }
           EOF
 
-      - name: Build APK
-        run: gradle assembleDebug --no-daemon
+          # SDK path binding
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Build APK with Gradle Wrapper
+        run: |
+          gradle wrapper --gradle-version 8.2
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload Clean APK
         uses: actions/upload-artifact@v4
