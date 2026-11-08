@@ -16,18 +16,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create Native WebView Project
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+
+      - name: Generate Clean Android Project
         run: |
           mkdir -p app/src/main/java/com/gtest/exam
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/mipmap-xxxhdpi
 
-          # Download and set app icon
+          # Set app icon if exists
           if [ -f "icon-512.png" ]; then
             cp icon-512.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           fi
 
-          # Android Manifest (No URL bar, Fullscreen Native WebView)
+          # Android Manifest (Zero URL Bar, Fullscreen Native)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -60,7 +68,7 @@ jobs:
           </resources>
           EOF
 
-          # Java MainActivity (Clean Native WebView, No URL Bar, No Sliders, No Ads)
+          # Java Native WebView Code (No Ads, No Sliders, Pure Webview)
           cat << 'EOF' > app/src/main/java/com/gtest/exam/MainActivity.java
           package com.gtest.exam;
 
@@ -83,12 +91,12 @@ jobs:
                                       WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
                   webView = new WebView(this);
-                  WebSettings webSettings = webView.getSettings();
-                  webSettings.setJavaScriptEnabled(true);
-                  webSettings.setDomStorageEnabled(true);
-                  webSettings.setDatabaseEnabled(true);
-                  webSettings.setLoadWithOverviewMode(true);
-                  webSettings.setUseWideViewPort(true);
+                  WebSettings s = webView.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setDatabaseEnabled(true);
+                  s.setLoadWithOverviewMode(true);
+                  s.setUseWideViewPort(true);
 
                   webView.setWebViewClient(new WebViewClient());
                   webView.loadUrl("https://toxic0784.github.io/GTEST/");
@@ -130,9 +138,8 @@ jobs:
 
           # App build.gradle
           cat << 'EOF' > app/build.gradle
-          plugins {
-              id 'com.android.application'
-          }
+          apply plugin: 'com.android.application'
+
           android {
               namespace 'com.gtest.exam'
               compileSdk 34
@@ -151,10 +158,8 @@ jobs:
           }
           EOF
 
-      - name: Build APK with Gradle
-        run: |
-          gradle wrapper
-          ./gradlew assembleDebug
+      - name: Build APK
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload Clean APK
         uses: actions/upload-artifact@v4
