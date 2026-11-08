@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.toxic0784.twa",
+    "sha256_cert_fingerprints": ["A8:25:A0:6C:51:44:A6:86:C3:97:A7:1A:A8:E0:66:6A:9D:0A:14:30:E6:80:D6:8D:F2:8E:45:00:66:2F:C0:ED"]
+  }
+}]
