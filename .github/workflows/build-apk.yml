@@ -27,16 +27,11 @@ jobs:
 
       - name: Generate Clean Android Project Files
         run: |
+          rm -rf app
           mkdir -p app/src/main/java/com/gtest/exam
           mkdir -p app/src/main/res/values
-          mkdir -p app/src/main/res/mipmap-xxxhdpi
 
-          # Set app icon if available
-          if [ -f "icon-512.png" ]; then
-            cp icon-512.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          fi
-
-          # AndroidManifest.xml (Zero TitleBar, Zero URL Bar, Pure Native Fullscreen)
+          # AndroidManifest.xml (Zero URL Bar, Fullscreen Native)
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -45,7 +40,7 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <application
                   android:allowBackup="true"
-                  android:icon="@mipmap/ic_launcher"
+                  android:icon="@android:drawable/sym_def_app_icon"
                   android:label="GTEST"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                   android:usesCleartextTraffic="true">
@@ -69,7 +64,7 @@ jobs:
           </resources>
           EOF
 
-          # MainActivity.java (Pure Webview, Clean, No Ads, No Sliders)
+          # MainActivity.java (Pure Webview, Clean, Zero Sliders, Zero Ads)
           cat << 'EOF' > app/src/main/java/com/gtest/exam/MainActivity.java
           package com.gtest.exam;
 
@@ -115,36 +110,43 @@ jobs:
           }
           EOF
 
-          # Root build.gradle
-          cat << 'EOF' > build.gradle
-          buildscript {
+          # settings.gradle
+          cat << 'EOF' > settings.gradle
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
                   google()
                   mavenCentral()
               }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.4'
-              }
           }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+          rootProject.name = "GTEST"
+          include ':app'
           EOF
 
-          # Settings.gradle
-          echo "include ':app'" > settings.gradle
+          # Root build.gradle
+          cat << 'EOF' > build.gradle
+          plugins {
+              id 'com.android.application' version '8.1.4' apply false
+          }
+          EOF
 
           # App build.gradle
           cat << 'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
           }
+
           android {
               namespace 'com.gtest.exam'
               compileSdk 34
+
               defaultConfig {
                   applicationId "com.gtest.exam"
                   minSdk 21
@@ -152,6 +154,7 @@ jobs:
                   versionCode 1
                   versionName "1.0"
               }
+
               buildTypes {
                   release {
                       minifyEnabled false
@@ -160,14 +163,11 @@ jobs:
           }
           EOF
 
-          # Local.properties for Android SDK path
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-
       - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload Clean Fullscreen APK
         uses: actions/upload-artifact@v4
         with:
-          name: GTEST-Fullscreen-App
+          name: GTEST-Fullscreen-APK
           path: app/build/outputs/apk/debug/app-debug.apk
